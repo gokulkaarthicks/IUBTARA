@@ -182,9 +182,9 @@ def worker_real(progress):
                     log.write(f"{status} (Attempt {attempt + 1}): {name} -> {masked}\n")
                 with open(FAILED_QUEUE_FILE, "a") as failed:
                     failed.write(f"{name}||{email}\n")
-    except Exception as e:
-        with open(LOG_FILE, "a") as log:
-            log.write(f"[ERROR] {name}: {e}")
+        except Exception as e:
+            with open(LOG_FILE, "a") as log:
+                log.write(f"[ERROR] {name}: {e}")
         finally:
             email_queue.task_done()
             progress.update(1)
@@ -317,6 +317,7 @@ if __name__ == "__main__":
         skip_scraping = True
 
     if os.path.exists(BACKUP_QUEUE_FILE):
+        already_emailed = load_emailed_emails()
         with open(BACKUP_QUEUE_FILE, "r") as bkp:
             for line in bkp:
                 try:
@@ -361,7 +362,8 @@ if __name__ == "__main__":
                 for school, profs in professors_by_school.items():
                     print(f"\n{school}")
                     for prof in profs:
-                        print(f" - {prof['name']} ({prof['email']})")
+                        if prof['email'] not in already_emailed:
+                            print(f" - {prof['name']} ({prof['email']})")
                 sys.exit(0)
 
             ensure_mail_running()
